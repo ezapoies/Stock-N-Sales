@@ -1,0 +1,21 @@
+.env
+.env.*
+!.env.example
+API key.txt
+.git
+.venv
+venv
+node_modules
+android
+build
+dist
+packaging
+www
+__pycache__
+*.py[cod]
+backend/stock_n_sales*.db
+backend/stock_n_sales*.db-*
+*.db
+*.db-shm
+*.db-wal
+*.db-journal

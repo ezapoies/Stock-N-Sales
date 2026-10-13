@@ -1,0 +1,23 @@
+{
+    "name": "stock-n-sales-mobile",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Capacitor Android wrapper for Stock N Sales",
+    "scripts": {
+        "test": "npm run test:mobile",
+        "build:web": "node scripts/build-mobile.mjs",
+        "android:sync": "npm run build:web && cap sync android",
+        "android:open": "cap open android",
+        "android:apk": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-apk.ps1",
+        "test:mobile": "node --test tests/mobile-store.test.mjs"
+    },
+    "dependencies": {
+        "@capacitor/android": "^7.4.3",
+        "@capacitor/core": "^7.4.3",
+        "chart.js": "^4.5.1"
+    },
+    "devDependencies": {
+        "@capacitor/cli": "^7.4.3",
+        "fake-indexeddb": "^6.2.4"
+    }
+}

@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: stock-n-sales-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/test
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: MONGO_URI
+        sync: false
