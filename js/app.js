@@ -593,35 +593,35 @@ function showCloudAccountScreen(mode = "login") {
         pageContent.innerHTML = `
             <div class="cloud-account-page">
                 <section class="cloud-account-card">
-                    <span class="cloud-account-eyebrow">ACCOUNT CONTROL CENTRE</span>
-                    <h2>Cloud account</h2>
-                    <p>Manage the account used to sync this business across your devices.</p>
+                    <h2>Account</h2>
+                    <p>Update the details linked to your account.</p>
                     <div id="accountCentreError" class="cloud-account-error" role="alert"></div>
                     <form id="accountDetailsForm">
                         <div class="form-group"><label for="accountName">Your name</label><input id="accountName" required></div>
                         <div class="form-group"><label for="accountBusiness">Business name</label><input id="accountBusiness" required></div>
                         <div class="form-group"><label for="accountEmail">Email</label><input id="accountEmail" type="email" required></div>
-                        <button class="primary-button cloud-account-submit" type="submit">Save account details</button>
+                        <button class="primary-button cloud-account-submit" type="submit">Save changes</button>
                     </form>
-                    <form id="accountPasswordForm">
-                        <h3>Change password</h3>
-                        <div class="form-group"><label for="accountCurrentPassword">Current password</label><input id="accountCurrentPassword" type="password" autocomplete="current-password" required></div>
-                        <div class="form-group"><label for="accountNewPassword">New password</label><input id="accountNewPassword" type="password" minlength="8" autocomplete="new-password" required></div>
-                        <button class="secondary-button" type="submit">Update password</button>
-                    </form>
-                    <p class="cloud-account-local">Other devices may remain signed in until their sessions expire.</p>
+                    <details class="account-settings-disclosure">
+                        <summary>Change password</summary>
+                        <form id="accountPasswordForm">
+                            <div class="form-group"><label for="accountCurrentPassword">Current password</label><input id="accountCurrentPassword" type="password" autocomplete="current-password" required></div>
+                            <div class="form-group"><label for="accountNewPassword">New password</label><input id="accountNewPassword" type="password" minlength="8" autocomplete="new-password" required></div>
+                            <button class="secondary-button" type="submit">Update password</button>
+                        </form>
+                    </details>
                     <div class="cloud-account-actions">
                         <button class="secondary-button" type="button" onclick="showDashboard()">Back to dashboard</button>
                         <button class="logout-button" type="button" onclick="logout()">Sign out on this device</button>
                     </div>
-                    <section class="account-danger-zone">
-                        <h3>Delete cloud account</h3>
-                        <p>This permanently deletes the cloud account and synced inventory. Enter your password to confirm.</p>
+                    <details class="account-settings-disclosure account-danger-zone">
+                        <summary>Delete account</summary>
+                        <p>This permanently deletes your account and cloud data.</p>
                         <form id="accountDeleteForm">
                             <div class="form-group"><label for="accountDeletePassword">Current password</label><input id="accountDeletePassword" type="password" autocomplete="current-password" required></div>
-                            <button class="logout-button" type="submit">Delete account and cloud data</button>
+                            <button class="logout-button" type="submit">Delete account</button>
                         </form>
-                    </section>
+                    </details>
                 </section>
             </div>
         `;
@@ -630,22 +630,18 @@ function showCloudAccountScreen(mode = "login") {
     }
 
     const creatingAccount = mode === "register";
+    const cloudAccountDescription = isCapacitorApp
+        ? "Connect to cloud sync to back up your data."
+        : creatingAccount
+            ? "Register this business to sync its inventory across your devices."
+            : "Sign in to download this business's inventory and sync changes across devices. Any separate local-only inventory on this device stays local and is not merged.";
     pageContent.innerHTML = `
         <div class="cloud-account-page">
             <section class="cloud-account-card">
                 <span class="cloud-account-eyebrow">OPTIONAL CLOUD SYNC</span>
                 <h2>${creatingAccount ? "Create a cloud account" : "Connect your cloud account"}</h2>
-                <p>${creatingAccount
-                    ? "Register this business to sync its inventory across your devices."
-                    : "Sign in to download this business's inventory and sync changes across devices. Any separate local-only inventory on this device stays local and is not merged."}</p>
+                <p>${cloudAccountDescription}</p>
                 <form id="cloudAccountForm" data-mode="${creatingAccount ? "register" : "login"}">
-                    ${isCapacitorApp ? `
-                        <div class="form-group">
-                            <label for="cloudApiUrl">Cloud server HTTPS address</label>
-                            <input type="url" id="cloudApiUrl" placeholder="https://your-server.example.com" autocomplete="url" required>
-                            <small>Enter the HTTPS address for the Stock N Sales server, without /api.</small>
-                        </div>
-                    ` : ""}
                     <div class="form-group">
                         <label for="cloudEmail">Email</label>
                         <input type="email" id="cloudEmail" autocomplete="email" required>
@@ -678,14 +674,6 @@ function showCloudAccountScreen(mode = "login") {
     document.getElementById("cloudAccountForm")
         ?.addEventListener("submit", handleCloudAccount);
 
-    if (isCapacitorApp && window.mobileStore) {
-        window.mobileStore.getCloudApiUrl().then(apiUrl => {
-            const input = document.getElementById("cloudApiUrl");
-            if (input && !input.value) input.value = apiUrl;
-        }).catch(error => {
-            console.error("Could not load the saved cloud server address:", error);
-        });
-    }
 }
 
 
@@ -711,7 +699,9 @@ async function setupAccountCentre() {
         document.getElementById("accountBusiness").value = account.businessName || "";
         document.getElementById("accountEmail").value = account.email || "";
     } catch (error) {
-        errorElement.textContent = error.message;
+        errorElement.textContent = error instanceof TypeError
+            ? "Couldn't load your account. Check your connection and try again."
+            : error.message;
     }
     document.getElementById("accountDetailsForm").addEventListener("submit", async event => {
         event.preventDefault();
@@ -803,7 +793,6 @@ async function handleCloudAccount(event) {
     try {
         if (isCapacitorApp && window.mobileStore) {
             await window.mobileStore.connectCloud({
-                apiBaseUrl: document.getElementById("cloudApiUrl").value.trim(),
                 mode,
                 payload
             });

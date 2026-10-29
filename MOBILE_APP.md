@@ -65,7 +65,8 @@ The project includes a Render Blueprint (`render.yaml`) that deploys the Flask
 backend as a free Docker web service. Render assigns the service a stable
 `onrender.com` HTTPS address; no purchased domain or PC-hosted tunnel is
 needed. Free services can sleep when idle, so the first request after a pause
-may take about a minute to start.
+may take about a minute to start. The mobile app allows up to two minutes for
+cloud requests so the service has time to wake.
 
 1. Put this project in a GitHub repository and connect that repository to
    Render using **New > Blueprint**. Render reads `render.yaml` and creates
@@ -75,13 +76,10 @@ may take about a minute to start.
 3. In MongoDB Atlas, add the outbound IP ranges shown for the Render service to
    the project's IP access list. Do not expose the database credential in the
    repository or APK.
-4. After deployment, copy the service's HTTPS `onrender.com` address. Use it
-   in the mobile app's cloud sign-in field (without `/api`). The app remembers
-   the address on that device for later sign-ins.
-
-The Android app still needs its first successful cloud connection before it
-can remember the server address. To remove that first manual entry too, set the
-deployed address as the app's built-in default and rebuild the APK.
+4. After deployment, the Android app can use the service's HTTPS `onrender.com`
+   address as its built-in cloud endpoint. Rebuild and install the APK after
+   changing that endpoint; users then only enter their account email and
+   password.
 
 ### Free self-hosted option: your PC and a Cloudflare Quick Tunnel
 

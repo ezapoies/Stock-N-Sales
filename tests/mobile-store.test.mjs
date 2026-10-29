@@ -335,6 +335,42 @@ test("requires a secure HTTPS URL for mobile cloud sync", async () => {
     );
 });
 
+test("allows idle cloud servers time to wake before timing out", async () => {
+    const store = loadStore();
+    const originalSetTimeout = globalThis.setTimeout;
+    const originalClearTimeout = globalThis.clearTimeout;
+    let timeoutHandler;
+    let timeoutMs;
+    globalThis.setTimeout = (handler, delay) => {
+        timeoutHandler = handler;
+        timeoutMs = delay;
+        return 1;
+    };
+    globalThis.clearTimeout = () => {};
+    globalThis.fetch = (_url, options) => new Promise((_resolve, reject) => {
+        options.signal.addEventListener("abort", () => {
+            reject(Object.assign(new Error("Aborted"), { name: "AbortError" }));
+        }, { once: true });
+    });
+
+    try {
+        const pending = store.connectCloud({
+            apiBaseUrl: "https://cloud.example.com",
+            mode: "login",
+            payload: { email: "owner@example.com", password: "password123" }
+        });
+        assert.equal(timeoutMs, 120000);
+        timeoutHandler();
+        await assert.rejects(
+            pending,
+            /The cloud server did not respond\. Your data remains on this device\./
+        );
+    } finally {
+        globalThis.setTimeout = originalSetTimeout;
+        globalThis.clearTimeout = originalClearTimeout;
+    }
+});
+
 test("sends mobile product deletions as cloud tombstones", async () => {
     const store = loadStore();
     let syncCount = 0;

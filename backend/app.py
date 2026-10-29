@@ -158,7 +158,10 @@ def delete_cloud_account(cloud_db, user_id, data):
 def require_selected_workspace():
     if request.method == "OPTIONS" or not request.path.startswith("/api/"):
         return None
-    if request.path in PUBLIC_API_PATHS:
+    if (
+        request.path in PUBLIC_API_PATHS
+        or request.path.startswith("/api/mobile/account/")
+    ):
         return None
 
     if session.get("cloud_user_id"):

@@ -1,6 +1,8 @@
 (() => {
     const DATABASE_NAME = "stock-n-sales-mobile";
     const DATABASE_VERSION = 3;
+    const DEFAULT_CLOUD_API_URL = "https://stock-n-sales-api.onrender.com";
+    const CLOUD_REQUEST_TIMEOUT_MS = 120000;
     const STORE_NAMES = [
         "workspaces",
         "profiles",
@@ -143,7 +145,7 @@
 
     async function remoteCloudRequest(baseUrl, path, token, body) {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 30000);
+        const timeout = setTimeout(() => controller.abort(), CLOUD_REQUEST_TIMEOUT_MS);
         try {
             const headers = { "Content-Type": "application/json" };
             if (token) headers.Authorization = `Bearer ${token}`;
@@ -1277,11 +1279,7 @@
     }
 
     function getCloudApiUrl() {
-        return runTransaction(["settings"], (transaction, setResult, fail) => {
-            const request = transaction.objectStore("settings").get("lastCloudApiUrl");
-            request.onsuccess = () => setResult(request.result?.value || "");
-            request.onerror = () => fail(request.error);
-        });
+        return Promise.resolve(DEFAULT_CLOUD_API_URL);
     }
 
     async function disconnectCloud() {
